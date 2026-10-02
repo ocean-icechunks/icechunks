@@ -57,8 +57,8 @@ plus a README and viewer for a fourth store that someone else builds.
   files that stay at the source.
 - **Use `git worktree` for anything substantial.** Concurrent sessions share this checkout.
 - **Store READMEs use the standard format, and carry the "icechunk 1.x will not work" note**
-  — both described in CLAUDE.md under "Store READMEs".
-- **Rebuild viewers only from a current gridlook, and expect to hard-reload.** CLAUDE.md,
+  — both described in AGENTS.md under "Store READMEs".
+- **Rebuild viewers only from a current gridlook, and expect to hard-reload.** AGENTS.md,
   "The browser viewer", and [notes/viewers.md](notes/viewers.md).
 
 ## Recently shipped (2026-09-17, PRs #12–#19, #23–#26)
@@ -112,7 +112,8 @@ compared). NOAA OISST got a README and a viewer.
 - [environment.md](notes/environment.md) — the 3.12 venv recipe and its traps
 - [home-quota.md](notes/home-quota.md) — the 20 GiB quota, how to measure it, what fills it
 - [verifying-published-repos.md](notes/verifying-published-repos.md) — checking a store over HTTPS
-- [viewers.md](notes/viewers.md) — gridlook, CORS on two hosts, catalogs, camera state
+- [viewers.md](notes/viewers.md) — gridlook, CORS on two hosts, catalogs, camera state, Source Cooperative hosting
+- [notebooks.md](notes/notebooks.md) — what each notebook does, what is mirrored, last runs
 - [gobai-o2-monthly.md](notes/gobai-o2-monthly.md) — what that cleanup found
 - [oa-indicators.md](notes/oa-indicators.md) — what that build found
 - [ohc-rebuild-2026-08-26.md](notes/ohc-rebuild-2026-08-26.md) — the CoastWatch rebuild record

@@ -10,7 +10,7 @@ and the accession is finished, so there is no update pipeline to write.
 Merging one variable per file into a single store had no precedent here; CoastWatch splits
 *into* groups because of codec differences, which is the opposite problem.
 
-Further detail is in CLAUDE.md under "Key gotchas (OA indicators…)". The ones that cost time:
+Further detail is in AGENTS.md under "Key gotchas (OA indicators…)". The ones that cost time:
 
 - **`xr.merge` applies `combine_attrs` to *variable* attributes, not just the dataset's.** So
   `combine_attrs="drop"` silently empties every variable's attrs. It looked like virtualizarr

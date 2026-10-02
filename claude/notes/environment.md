@@ -15,7 +15,7 @@ at some point between the build and 2026-09-17.
 
 Consequence: **`pip install "icechunk>=2.1"` in the current image resolves to
 nothing** — pip reports no matching distribution, because the only versions it can
-see for 3.11 are the 1.1.x line. The install line in CLAUDE.md is correct about
+see for 3.11 are the 1.1.x line. The install line in AGENTS.md is correct about
 what is needed and silently wrong about whether it will work here.
 
 **A 3.12 venv works, and this is the recipe** (verified 2026-09-17 by running
@@ -72,7 +72,7 @@ no lock file.
 `NetCDF3Parser` (the `daily` and `14day_v1` groups) reaches
 `kerchunk.netCDF3.NetCDF3ToZarr`, which subclasses `scipy.io._netcdf.netcdf_file`.
 So the NetCDF-3 path needs **kerchunk and scipy**, neither of which appears in the
-notebook imports or in CLAUDE.md's pip line. It has never been noticed because the
+notebook imports or in AGENTS.md's pip line. It has never been noticed because the
 JupyterLab image ships both. On a bare env, the two NetCDF-3 groups fail with
 kerchunk's "pip/conda install scipy" hint while the HDF5 group works fine — which
 looks like a data problem and is not one.
