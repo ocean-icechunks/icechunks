@@ -44,6 +44,23 @@ means re-serving NOAA bytes through infrastructure we would have to run.
   bucket with a CORS configuration (`AllowedOrigin *`, readable at `/?cors`), so the OISST
   viewer draws. The references there are `s3://` URLs; icechunk-js rewrites them to HTTPS.
 
+## What `publish_viewer.py` guards against
+
+All four viewers were rebuilt on 2026-09-19 from gridlook `b3c42b1` (114 files, 24.8 MB);
+the OA viewer prefix holds 102 objects.
+
+- **A stale gridlook checkout.** `build()` fetches and exits if `~/gridlook` is behind its
+  remote (`--allow-stale` overrides); `build-info.json` records `gridlook_behind_remote` and
+  the Node version.
+- **No default store.** With no `#…` fragment gridlook opens its hard-coded demo (an OGS
+  Mediterranean store, `DEFAULT_DATASET` in `HashGlobeView.vue`). `write_default_store` injects a one-line script into the published
+  `index.html` that sets the hash to the product's first store. Build output only; the
+  lasting fix belongs in the gridlook fork.
+- **A missing `catalog`.** One `--dist` is reused across products, so a product without one
+  publishes whatever the dist last held.
+- **Per-store `variables`.** A store entry may override the product's list: noaa-oisst's
+  `daily` group has `sst` where `monthly` has `sst_mean`.
+
 ## Rebuilt 2026-09-19: what went wrong with the first builds
 
 - **Stale clone.** All 2026-09-17 builds came from `~/gridlook` at `2649e66`, 98 commits
@@ -111,5 +128,26 @@ positioning and copying, not by computing one.** `alt` especially: `95910936` fr
 - **README nav rows are plain markdown links, not centered HTML.** GitHub allows
   `<p align="center">`, but Source Cooperative renders the README through its own pipeline
   and serves the raw file as plain text, so HTML is a gamble in two places out of three.
-- Source Cooperative's static-hosting behaviour — content types never inferred, no directory
-  index, the edge 403ing `Python-urllib` — is in CLAUDE.md under "The browser viewer".
+- Node: gridlook's `package.json` asks for Node >= 24.16; the 2026-09-17 build ran fine on
+  the image's Node 20.19.6. Build with `vite build --sourcemap false` and a capped heap —
+  `npm run build` adds `vue-tsc` and source maps and gets OOM-killed on a small machine.
+
+## Source Cooperative as a static host
+
+What Source Cooperative does and does not do for a static site (checked 2026-09-17):
+
+- **CORS is wide open** — `access-control-allow-origin: *`, all headers exposed, `Range`
+  honoured, on GET and on the OPTIONS preflight. A viewer served anywhere can read a store.
+- **Content types are served as uploaded, never inferred.** An upload without
+  `ContentType` comes back `binary/octet-stream`, and a browser refuses an ES module or a
+  wasm blob served that way. `publish_viewer.py` sets the type for every extension.
+- **No directory index.** `…/viewer/` returns **400**; links must name `index.html`.
+- **The edge 403s the default `Python-urllib` User-Agent.** Any check from Python has to
+  send its own; `curl` and boto3 are unaffected. This looks exactly like a permissions
+  failure and is not one.
+- `Cache-Control` is accepted on upload but not echoed back on GET.
+
+Two details from the old CLAUDE.md section: `mode: "no-cors"` is no workaround, since it
+returns an opaque response the page may not read; and Source Cooperative drops the
+`Cache-Control: no-cache` uploaded with `index.html` and sends only `Last-Modified`, which is
+why browsers cache the page heuristically.

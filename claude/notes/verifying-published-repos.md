@@ -1,6 +1,6 @@
 # Verifying a published Icechunk repo without icechunk installed
 
-The JupyterLab base env does **not** have `icechunk` (see CLAUDE.md "Required
+The JupyterLab base env does **not** have `icechunk` (see AGENTS.md "Required
 packages" — pip, never conda, or the env will not solve). So a session that wants to
 confirm a published repo exists cannot just call `icechunk.Repository.open`, and
 installing a package is a poor reason to answer a one-line status question.
@@ -30,7 +30,7 @@ time; build the 3.12 venv in [environment.md](environment.md) when it is worth i
 was: that is how the anonymous read path was confirmed on 2026-09-17.) The published repos have `save_config()` applied, so anonymous reopeners pick
 up the `VirtualChunkContainer` without passing config themselves.
 
-Related gotcha already in CLAUDE.md, worth not re-learning: a wrong anonymous read
+Related gotcha already in AGENTS.md, worth not re-learning: a wrong anonymous read
 URL raises `RepositoryNotFoundError` **deterministically**, and the URL must include
 the bucket (`.../ocean-icechunks/noaa-ohc/na`). It is not a flaky gateway, so do not
 add retries around it.

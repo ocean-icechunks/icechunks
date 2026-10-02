@@ -50,3 +50,21 @@ work looked unfinished from `main` — CLAUDE.md said "in progress", the noteboo
 `main` had no outputs — while the repos had in fact been live the whole time. PR #12
 committed the executed notebook for exactly this reason. If a production notebook is
 run, commit it the same day; the outputs are the build log.
+
+## Coverage as built
+
+First built under `fish-pace/coastwatch/ocean-heat/{na,np,sp}` (PRs #3–#6); the destination
+re-point to `ocean-icechunks/noaa-ohc` landed in PR #8. The 2026-08-26 rebuild executed
+`ocean-heat-production-sc.ipynb` end to end, committed all nine groups, and passed the
+boundary / variable-set / codec-homogeneity assertions.
+
+2020-04-30 → 2026-08-26, from the executed notebook's outputs:
+
+| Region | `daily` | `14day_v1` | `14day` | Corrupt files dropped |
+|---|---|---|---|---|
+| na | 1357 | 430 | 507 | 6 (`14day`) |
+| np | 1356 | 390 | 513 | 1 (`daily`), 21 (`14day_v1`) |
+| sp | 1349 | 411 | 513 | none |
+
+Corrupt source files are dropped by design (`open_region` counts them); the per-region counts
+differ because the bad files are in the source archive, not in our handling of it.
