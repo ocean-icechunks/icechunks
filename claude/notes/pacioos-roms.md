@@ -254,6 +254,22 @@ Raised 2026-11-10 as a 2–3 day window for the copy. The risks, roughly by like
 
 Route 1 (they push) avoids every one of these, which makes it the first thing to ask for.
 
+## Decision and deadline (2026-11-10)
+
+- **Destination: Source Cooperative**, original NetCDFs copied unchanged, then a virtual
+  Icechunk built against that copy. Not NODD: Eli cannot give PacIOOS access to her NOAA
+  NODD buckets.
+- **Deadline 2026-11-18** for the first copy.
+- **Interim:** Eli copies from a read-only login on their server ("Route A"). The fallback is
+  a script PacIOOS runs with a temporary key file from Eli ("Route B"). **End goal:** PacIOOS
+  uploads its own daily runs ("Route C"), once it has a Source Cooperative account. The
+  `source-coop login` browser flow on a headless server is the expected snag.
+- The plain-language plan for PacIOOS is a Claude Doc:
+  <https://claude.ai/artifact/4Nqhx91MozRLbfjYXmfpP7>. Upload credentials, as used here:
+  STS keys from `source-coop creds`, endpoint `https://data.source.coop`, region
+  `us-east-1` (see `icechunk_utils.get_source_credentials`). `rclone` against that endpoint
+  is **untested**, including multipart uploads of ~2 GB files.
+
 ## Options, best first
 
 1. **PacIOOS exposes the files** (no download through OPeNDAP):
@@ -261,14 +277,22 @@ Route 1 (they push) avoids every one of these, which makes it the first thing to
      CoastWatch pattern. Store is MB; every read hits their server.
    - (b) they copy the NetCDFs to a bucket (Source Cooperative, or NODD as for
      gobai-rfrom) → virtual store against the bucket. One-time ~1 TB for the reanalysis.
-   - (c) **an account for Eli on their server** (raised 2026-11-10). A read-only
-     SSH/SFTP login (or an rsync-only key) on the data directory. Nothing is exposed
-     publicly, transfers resume, and checksums are built in. With a shell, `gcloud storage
-     rsync` / `rclone` run on their host send straight to the bucket in one hop, and
-     `h5dump -pH` / `ncdump -hs` answer the chunking and compression questions directly.
-     Things to agree with them: a sponsored UH account if their IT requires one, read-only
-     scope, expiry, and throttling (`nice`/`ionice`, `--bwlimit`, staying off the
-     forecast-job window).
+   - (c) **an account for Eli on their server** (raised 2026-11-10). In plain terms: a
+     username and login key that let Eli connect to the PacIOOS computer from a terminal
+     (SSH), with permission only to *read* the model data folders. From there she can:
+     - see the real files: names, sizes, and how they are stored, which settles the
+       compression and time-layout questions in a few minutes;
+     - copy them straight to cloud storage with a copy tool run on their machine (`rclone`),
+       at full network speed. It picks up where it stopped after a dropped connection and
+       checks each file arrived intact;
+     - do this privately, with no public download link for bots to find.
+
+     What to agree with PacIOOS: read-only access to the data folders only; an expiry date;
+     copying at a capped speed and outside the early-afternoon (HST) forecast run; and
+     whether UH IT must sponsor an account for someone outside UH.
+
+     Destination is **Source Cooperative**, not NODD: Eli cannot give PacIOOS access to her
+     NOAA NODD buckets.
 2. **PacIOOS runs a script on their side** that writes Zarr/Icechunk to Source
    Cooperative from local files — modelled on the GOBAI-O2 notebook.
 3. **Forecast as a daily append** — by us through OPeNDAP or by a step in their forecast
