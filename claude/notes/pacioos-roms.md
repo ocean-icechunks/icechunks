@@ -261,6 +261,14 @@ Route 1 (they push) avoids every one of these, which makes it the first thing to
      CoastWatch pattern. Store is MB; every read hits their server.
    - (b) they copy the NetCDFs to a bucket (Source Cooperative, or NODD as for
      gobai-rfrom) → virtual store against the bucket. One-time ~1 TB for the reanalysis.
+   - (c) **an account for Eli on their server** (raised 2026-11-10). A read-only
+     SSH/SFTP login (or an rsync-only key) on the data directory. Nothing is exposed
+     publicly, transfers resume, and checksums are built in. With a shell, `gcloud storage
+     rsync` / `rclone` run on their host send straight to the bucket in one hop, and
+     `h5dump -pH` / `ncdump -hs` answer the chunking and compression questions directly.
+     Things to agree with them: a sponsored UH account if their IT requires one, read-only
+     scope, expiry, and throttling (`nice`/`ionice`, `--bwlimit`, staying off the
+     forecast-job window).
 2. **PacIOOS runs a script on their side** that writes Zarr/Icechunk to Source
    Cooperative from local files — modelled on the GOBAI-O2 notebook.
 3. **Forecast as a daily append** — by us through OPeNDAP or by a step in their forecast
