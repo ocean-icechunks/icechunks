@@ -75,6 +75,46 @@ downloaded from ERDDAP does not carry the source's HDF5 chunking.
 Compression of one `temp` step (10% NaN land): zlib 1.39×, blosc-zstd+shuffle 1.94×,
 plus rounding to 0.001 °C 2.2×. A materialized reanalysis would be ~550–600 GB.
 
+## Chunking — will the files need reprocessing? (2026-11-10)
+
+Test file: one day (8 steps) of `roms_hiig_reanalysis`, all four 3-D variables, from ERDDAP
+`.nc` (265 MB in 261 s, ~1.0 MB/s), plus the `_ssh` day (1.9 MB in 3 s).
+
+**What ERDDAP gives:** NetCDF-3 classic, `time` a *fixed* dimension (not UNLIMITED). So each
+variable is one contiguous, uncompressed block of `(ntime, 36, 195, 295)`, with no
+interleaving between variables. It carries over the source's `_ChunkSizes` attribute, but that
+attribute describes nothing in this file. ERDDAP renames `lat`/`lon` to
+`latitude`/`longitude` (the native names are `lat`/`lon`, which gridlook prefers) and
+re-encodes time as seconds since 1970 (natively hours since 2000-01-01).
+`_FillValue = 9.96921e36` and `Conventions = "CF-1.6, ACDD-1.3"`. About 10% of the cells are
+NaN: by depth level, 56,407 of 57,525 are wet at the surface, 55,377 at level 20 and 211 at
+5500 m.
+
+**What the native files have (from THREDDS):** HDF5, chunk `(1, 36, 195, 295)` = 8.3 MB raw.
+`salt` shows **two `_FillValue` attributes** in the THREDDS DAS (9.96921e36 and NaN), a
+source-metadata quirk to check in the real file.
+
+**Either way, it is one time step per chunk.** That suits maps: gridlook or a forecast map
+of one step reads 8.3 MB per variable. It is bad for time series: a point series through the
+reanalysis touches all 35,040 chunks, ~290 GB per variable. GOBAI was reprocessed for the
+same reason, to `(100, 1, 180, 180)`.
+
+Conclusion:
+
+- **Forecast (and probably the hindcast): no reprocessing.** Use virtual references
+  over the native files as they are. People use these as maps, and data arriving daily one
+  run at a time cannot be time-chunked anyway.
+- **Reanalysis: reprocess if time-series users matter.** It is static and gets used for
+  climatologies and point series. A candidate is `(240, 1, 98, 148)`: a month × one level ×
+  a quarter of the grid, ~14 MB raw, ~7 MB compressed. A point series then reads 146 chunks,
+  ~1 GB, instead of 290 GB. In exchange, one map at one level reads 4 chunks (~28 MB) instead
+  of 8.3 MB of a full-depth chunk. Unsettled: whether to also keep a map-chunked copy (2×
+  storage), and the exact shape.
+- **Virtualizing ERDDAP-downloaded files is possible but pointless.** References can be
+  computed (HYCOM-style) into the contiguous blocks at `(1, 36, 195, 295)` or
+  `(1, 1, 195, 295)`, but the data would sit uncompressed (~1.9× larger) with the same
+  time-series problem. If we download through ERDDAP at all, write compressed Zarr directly.
+
 ## Moving the files to object storage (GCS) — estimates
 
 The ~0.8 MB/s above is **THREDDS's per-request cost**: it reads the HDF5, decompresses and
