@@ -1,5 +1,5 @@
 <!-- Mirror of the Claude Doc https://claude.ai/artifact/4Nqhx91MozRLbfjYXmfpP7
-     as Eli edited it (doc rev 2303, 2026-11-10). The doc is the live copy that goes to
+     as Eli edited it (doc rev 2321, 2026-11-10). The doc is the live copy that goes to
      PacIOOS; edit there and refresh this file. Background and measurements:
      pacioos-roms.md. -->
 
@@ -9,7 +9,7 @@ Nov 10, 2026 · @Eli
 
 ## Summary
 
-The five Hawaiʻi model archives total about 5 TB, and copying them straight from the PacIOOS server to Source Coop takes one to two days. That will allow time to get everything transfered by the start of the hackathon.
+The five Hawaiʻi model archives total about 5 TB, and copying them straight from the PacIOOS server to Source Coop takes one to two days. That will allow time to get everything transferred by the start of the hackathon.
 
 | Dataset | What it is | Years | Estimated size |
 | --- | --- | --- | --- |
@@ -31,21 +31,21 @@ The sizes are worked out from the data's dimensions, without compression. If the
 
 ## What we are doing
 
-We copy the original NetCDF files, unchanged, to Source Cooperative. Source Coop is supporting this effort to host ocean model data as it fit with their mission to provide cloud-optimized earth data. Also 5 Tb is not that big. Once the netcdfs are in Source Coop, building the icechunk is straight forward.  Plan:
+We copy the original NetCDF files, unchanged, to Source Cooperative. Source Coop is supporting this effort to host ocean model data as it fits with their mission to provide cloud-optimized earth data. Also 5 TB is not that big. Once the NetCDFs are in Source Coop, building the icechunk is straightforward.  Plan:
 
-- **The raw NetCDFS are not reformatted.** I don't think we need to do any re-processing or rechunking. The chunking is better for maps than for time series, but the files are fine for this stage.
+- **The raw NetCDFs are not reformatted.** I don't think we need to do any re-processing or rechunking. The chunking is better for maps than for time series, but the files are fine for this stage.
 - **File access.** Users read from the NetCDFs on Source Cooperative, not from the PacIOOS server, so the server is not stressed.
 
-## How to get the netCDF onto Source Coop
+## How to get the NetCDFs onto Source Coop
 
-A few options. Given that the hackathon is in 7 days, it might make sense for me (Eli) to get access to the server (read-only login so I can ftp out) and I put files on Source Coop. If you prefer, I can help you get set up on Source Coop but we should have a 1 hour meeting for me to help you get all set up with the authentication step.
+A few options. Given that the hackathon is in 7 days, it might make sense for me (Eli) to get access to the server (read-only login so I can copy the files out) and I put files on Source Coop. If you prefer, I can help you get set up on Source Coop but we should have a 1 hour meeting for me to help you get all set up with the authentication step.
 
 | Route | Who runs the copy | What PacIOOS provides | Notes |
 | --- | --- | --- | --- |
 | A. Eli copies | Eli, logged in to the PacIOOS server | A read-only login for a week | Eli uploads first copy to Source Coop and then walks PacIOOS staff through the steps at the hackathon. |
 | B. PacIOOS uploads on its own | PacIOOS staff | A Source Cooperative account | This requires getting the Source Coop account and then getting authentication set up. Not hard, but a little finicky and might be easier to do together online. |
 
-Route A puts the least work on PacIOOS: one account, then Eli does the rest. Route B avoids an account but needs a bit more pre-work.
+Route A puts the least work on PacIOOS: one account, then Eli does the rest. Route B avoids a login for Eli but needs a bit more setup.
 
 Proposed schedule (drawn as a timeline in the doc):
 
@@ -53,11 +53,11 @@ Proposed schedule (drawn as a timeline in the doc):
 | --- | --- |
 | PacIOOS sets up the login | Nov 10 to Nov 12 |
 | Look at files, test one | Nov 12 |
-| Full copy (1 to 2 days) | Nov 13 to Nov 15 |
-| Check copies, build index | Nov 16 to Nov 17 |
-| Deadline | Nov 18 |
+| Full copy (1 to 2 days) | Nov 13 to Nov 14 |
+| Check copies, build index | Nov 15 to Nov 16 |
+| Hackathon starts | Nov 17 |
 
-The copy itself needs one to two days; the extra day absorbs a slow link or a restart.
+The copy itself needs one to two days, so the files and the Icechunk index are in place by Nov 16, the day before the hackathon.
 
 ## Route A: what PacIOOS needs to do
 
@@ -68,7 +68,7 @@ PacIOOS sets up one login; Eli handles everything after that.
 - [ ] **Check that the machine can reach the internet over HTTPS** (port 443) to `data.source.coop`. Some servers block outgoing connections.
 - [ ] **Agree a speed cap and quiet hours** (if desired).
 - [ ] **Set an end date** for the login, for example two weeks after the copy finishes.
-- [ ] If UH IT requires it, **sponsor a guest account**. Eli is at the University of Washington and NOAA, so she has no UH account. Note, my son is a graduate student in the marine science depart at UH and is working on ocean model data, if that makes things easier.
+- [ ] If UH IT requires it, **sponsor a guest account**. Eli is at the University of Washington and NOAA, so she has no UH account. Note, my son is a graduate student in the marine science department at UH and is working on ocean model data, if that makes things easier.
 
 What Eli does from that login:
 
@@ -85,7 +85,7 @@ Once the archive is in place, the only ongoing job is copying each day's new mod
 2. They install Source Cooperative's command-line login tool, which hands out temporary upload keys. Eli has scripts and examples.
 3. Run the `rclone` scripts as Route A, which will upload files.
 
-The one awkward step is the Source Coop login tool's sign-in: it opens a web page, which a server with no browser cannot show. After the hackathon, we can help you work with Source Coop to get an ARN setup for auto-updating. That is what we do with the [NOAA OISST icechunk](https://source.coop/ocean-icechunks/noaa-oisst) on Source Coop.
+The one awkward step is the Source Coop login tool's sign-in: it opens a web page, which a server with no browser cannot show. After the hackathon, we can help you work with Source Coop to get an ARN setup for auto-updating. NERACOOS/GMRI uses the same setup to auto-update the [NOAA OISST icechunk](https://source.coop/ocean-icechunks/noaa-oisst) on Source Coop, which they build and maintain.
 
 ## Questions for PacIOOS
 
@@ -96,6 +96,6 @@ The one awkward step is the Source Coop login tool's sign-in: it opens a web pag
 - [ ] Route A or Route B?
 - [ ] Should every past forecast run be copied, or only the series the website shows?
 
-## Connection to EarthMover
+## Connection to Earthmover
 
-We have a Community Organization on EarthMover for Ocean Icechunks and have a pipeline for auto adding/linking the icechunks on our Ocean Icechunk Source Coop org to the EarthMover org --- if you want to go that route. We can help with setting up a PacIOOS community org on EarthMover or use the existing Ocean Icechunk org.
+We have a Community Organization on Earthmover for Ocean Icechunks and have a pipeline for auto adding/linking the icechunks on our Ocean Icechunk Source Coop org to the Earthmover org --- if you want to go that route. We can help with setting up a PacIOOS community org on Earthmover or use the existing Ocean Icechunk org.

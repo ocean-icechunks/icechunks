@@ -259,7 +259,10 @@ Route 1 (they push) avoids every one of these, which makes it the first thing to
 - **Destination: Source Cooperative**, original NetCDFs copied unchanged, then a virtual
   Icechunk built against that copy. Not NODD: Eli cannot give PacIOOS access to her NOAA
   NODD buckets.
-- **Deadline 2026-11-18** for the first copy.
+- **Deadline: the hackathon starts 2026-11-17**; files and index should be in place by 11-16.
+- **Auto-updating (after the hackathon)** would use an AWS role ARN granted by Source
+  Cooperative, the setup NERACOOS/GMRI uses to update the NOAA OISST store. Eli confirmed
+  this with Alex Kerney on 2026-11-10.
 - **Interim:** Eli copies from a read-only login on their server ("Route A"). The fallback is
   a script PacIOOS runs with a temporary key file from Eli ("Route B"). **End goal:** PacIOOS
   uploads its own daily runs ("Route C"), once it has a Source Cooperative account. The
