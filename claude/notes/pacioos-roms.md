@@ -75,6 +75,44 @@ downloaded from ERDDAP does not carry the source's HDF5 chunking.
 Compression of one `temp` step (10% NaN land): zlib 1.39×, blosc-zstd+shuffle 1.94×,
 plus rounding to 0.001 °C 2.2×. A materialized reanalysis would be ~550–600 GB.
 
+## Waves and wind (WW3, WRF) — sizes (2026-11-10)
+
+Pages: <https://www.pacioos.hawaii.edu/waves/model-hawaii/> (`ww3_hawaii`) and
+<https://www.pacioos.hawaii.edu/weather/model-wind-hawaii/> (`wrf_hi`). Both are THREDDS
+FMRCs of **one run per day at 00Z**, and unlike ROMS **the whole archive is kept** back to
+the first run. The `*_lon180` ERDDAP twins are ERDDAP-side transforms of the same data, so
+ignore them.
+
+| | `ww3_hawaii` (WaveWatch III) | `wrf_hi` (WRF) |
+|---|---|---|
+| Grid | 101 × 141 (0.05°), 1 level | 138 × 213 (~6 km) |
+| Variables | 9: `Thgt Tper Tdir` (total), `whgt wper wdir` (wind sea), `shgt sper sdir` (swell) | 8: `Tair Uwind Vwind rain Qair Pair lwrad_down swrad` |
+| Step | hourly | hourly |
+| "Best" series | 2011-06-21 → 2026-11-16, 133,452 steps | 2010-05-14 → 2026-11-15, 143,417 steps |
+| Runs on the server | 5,230 (2011-06-21 → 2026-11-09) | 5,605 (2010-05-14 → 2026-11-08) |
+| Steps per run (one sampled) | 181 (7.5 days) | 163 (~6.8 days) |
+| One variable, one step | 57 KB | 118 KB |
+| **"Best" series, raw** | **~68 GB** | **~135 GB** |
+| **All runs with overlaps, raw** | **~0.49 TB** | **~0.86 TB** |
+| Source format (from THREDDS DAS) | no `_ChunkSizes` shown → probably **NetCDF-3**, uncompressed | NetCDF-4/HDF5, chunk `(1, 138, 213)` |
+| Virtual refs, "best" series | ~1.2 M | ~1.1 M |
+
+Run counts per year are 280–366, so some days have no run (2024–2026 WRF has only
+~280/year). Steps per run were sampled from one run each and may vary.
+
+Totals, raw float32:
+
+| | "Best" series only | Every run kept |
+|---|---|---|
+| ROMS (forecast + hindcast + reanalysis, 3-D) | ~2.4 TB | ~3.5 TB |
+| WW3 | ~0.07 TB | ~0.49 TB |
+| WRF | ~0.14 TB | ~0.86 TB |
+| **All three** | **~2.6 TB** | **~4.8 TB** |
+
+The ROMS reanalysis and hindcast dominate. Waves and wind together are under 0.25 TB as
+best series, which at ~0.8 MB/s through OPeNDAP is about 3.5 days. Pulling those over the
+public server is feasible, if slow.
+
 ## Chunking — will the files need reprocessing? (2026-11-10)
 
 Test file: one day (8 steps) of `roms_hiig_reanalysis`, all four 3-D variables, from ERDDAP
@@ -114,6 +152,40 @@ Conclusion:
   computed (HYCOM-style) into the contiguous blocks at `(1, 36, 195, 295)` or
   `(1, 1, 195, 295)`, but the data would sit uncompressed (~1.9× larger) with the same
   time-series problem. If we download through ERDDAP at all, write compressed Zarr directly.
+
+**Decision (Eli, 2026-11-10): no reprocessing for now.** Every store is virtual over
+PacIOOS's NetCDFs as they are. The reanalysis rechunk above stays a possible later step.
+
+## Would the HYCOM chunking trick help? (2026-11-10)
+
+The trick (`~/hycom/claude/notes/plan-issue-1.md`): in an **uncompressed, contiguous**
+NetCDF-3 file, any contiguous byte range is a valid reference. So the build parses each
+file's header, computes offsets, and builds `ChunkManifest.from_arrays` directly, choosing
+the chunk size instead of inheriting "one whole variable per record". HYCOM used one depth
+level of one step (29 MB) as the chunk.
+
+What it can do, and what it cannot:
+
+- It only **splits along the leading dimensions** of a contiguous block, giving full trailing
+  planes (lat × lon). It cannot make lat/lon tiles, because a sub-rectangle is not contiguous
+  bytes.
+- It can **merge consecutive time steps only when they are adjacent in the file**: true for a
+  fixed time dimension (as in the ERDDAP files), false for an UNLIMITED record dimension,
+  where variables interleave record by record. It never merges across files, and each
+  forecast run is its own file.
+- It needs **uncompressed** data. Deflated HDF5 chunks are opaque.
+
+Applied here:
+
+| Dataset | Source layout | Does the trick help? |
+|---|---|---|
+| ROMS (3 sets) | HDF5 chunks `(1, 36, 195, 295)`, compression unknown | **Only if uncompressed.** An uncompressed chunk is C-ordered, so each depth level is a contiguous 230 KB slab, and per-depth refs `(1, 1, 195, 295)` become possible. A map at one depth then reads 230 KB instead of 8.3 MB. That matters for gridlook, where the surface is the common view. A point series reads 36× less (~8 GB per variable through the reanalysis), which is still poor. It costs 36× the refs: ~5 M for the reanalysis, within limits. If the chunks are deflated, it does not apply. |
+| WW3 | probably NetCDF-3, uncompressed | **Possibly, in reverse.** The chunks are already tiny (57 KB = one map). With a fixed time dimension, references could span many steps, e.g. 24–181 h = 1.4–10 MB, which gives much better time series and far fewer refs. With an UNLIMITED time dimension (more likely for model output), the records interleave and nothing can be merged. Needs one real file header. |
+| WRF | HDF5 chunks `(1, 138, 213)` | **No.** The chunks are already a single 2-D map, and HDF5 chunks are allocated separately, so they cannot be merged. |
+
+So the trick is a **maybe for ROMS and WW3**, and both hinge on facts only a real file
+shows (HDF5 filters for ROMS, the time-dimension type for WW3). Ask PacIOOS for **one file of
+each**, or for `ncdump -hs` / `h5dump -pH` output, before designing the references.
 
 ## Moving the files to object storage (GCS) — estimates
 
@@ -199,6 +271,8 @@ Route 1 (they push) avoids every one of these, which makes it the first thing to
 
 - Are the files on disk the same z-level regular-grid product THREDDS serves, or does
   THREDDS/NcML reshape native ROMS output?
+- One real file of each product (or `ncdump -hs` / `h5dump -pH`): HDF5 filters on the ROMS
+  chunks, and whether WW3 is NetCDF-3 with an UNLIMITED or fixed time dimension.
 - File sizes and compression; file granularity (per run? per day? per year for the
   reanalysis?).
 - Would they accept 1a or 1b? Any usage policy or rate limit?
