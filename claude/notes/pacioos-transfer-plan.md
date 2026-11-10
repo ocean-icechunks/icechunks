@@ -1,14 +1,15 @@
+<!-- Mirror of the Claude Doc https://claude.ai/artifact/4Nqhx91MozRLbfjYXmfpP7
+     as Eli edited it (doc rev 2303, 2026-11-10). The doc is the live copy that goes to
+     PacIOOS; edit there and refresh this file. Background and measurements:
+     pacioos-roms.md. -->
+
 # Getting the PacIOOS model files onto Source Cooperative
 
-> Snapshot of the Claude Doc <https://claude.ai/artifact/4Nqhx91MozRLbfjYXmfpP7> as of
-> 2026-11-10 (rev 10), before Eli's edits. The doc is the live copy that goes to PacIOOS;
-> this file is the repo record. Background and measurements: `pacioos-roms.md`.
-
-Nov 10, 2026 · Eli Holmes
+Nov 10, 2026 · @Eli
 
 ## Summary
 
-The five Hawaiʻi model archives total about 5 TB, and copying them straight from the PacIOOS server takes one to two days. That fits the 8-day goal with room to spare.
+The five Hawaiʻi model archives total about 5 TB, and copying them straight from the PacIOOS server to Source Coop takes one to two days. That will allow time to get everything transfered by the start of the hackathon.
 
 | Dataset | What it is | Years | Estimated size |
 | --- | --- | --- | --- |
@@ -18,35 +19,33 @@ The five Hawaiʻi model archives total about 5 TB, and copying them straight fro
 | ROMS sea surface height | 2-D companion files for the three above | as above | 0.1 TB |
 | WRF wind and weather | One ~7-day run per day | 2010–now | 0.9 TB |
 | WW3 waves | One 7.5-day run per day | 2011–now | 0.5 TB |
-| **Total** | | | **about 5 TB** |
+| **Total** |  |  | **about 5 TB** |
 
 | Copy speed | Time for 5 TB |
 | --- | --- |
 | 100 MB/s (a typical UH server on a 1 Gbps link) | about 14 hours |
 | 50 MB/s (busy or shared link) | about 28 hours |
-| 1 MB/s (through the public THREDDS/ERDDAP pages, as measured) | about 2 months |
+| 1 MB/s (through the public THREDDS/ERDDAP pages, as measured) - So not what we want! | about 2 months |
 
-The sizes are worked out from the data's dimensions, without compression. If the files on disk are compressed, the real total is smaller. The copy has to be made from the server itself: the public web pages repackage the data as they send it, which is why they are about 100 times slower.
+The sizes are worked out from the data's dimensions, without compression. If the files on disk are compressed, the real total is smaller.
 
 ## What we are doing
 
-We copy the original NetCDF files, unchanged, to Source Cooperative, a free public cloud archive for open data. Eli then builds an Icechunk index next to them. The index is a small catalog that lets people open the whole archive as one dataset in Python or a browser, reading straight from the cloud copy.
+We copy the original NetCDF files, unchanged, to Source Cooperative. Source Coop is supporting this effort to host ocean model data as it fit with their mission to provide cloud-optimized earth data. Also 5 Tb is not that big. Once the netcdfs are in Source Coop, building the icechunk is straight forward.  Plan:
 
-- **Nothing is reformatted.** The index points into the original files byte for byte, so they must not be changed after they are uploaded.
-- **Downloads move off PacIOOS.** Users read from Source Cooperative, not from the PacIOOS server.
-- **Old forecasts are kept.** The THREDDS server keeps the ROMS forecast only from 2025 on; the cloud copy becomes the long-term archive.
+- **The raw NetCDFS are not reformatted.** I don't think we need to do any re-processing or rechunking. The chunking is better for maps than for time series, but the files are fine for this stage.
+- **File access.** Users read from the NetCDFs on Source Cooperative, not from the PacIOOS server, so the server is not stressed.
 
-## The plan
+## How to get the netCDF onto Source Coop
 
-For the 8-day deadline, Eli does the first copy herself from a login on the PacIOOS server. Later, PacIOOS uploads the new daily files on its own.
+A few options. Given that the hackathon is in 7 days, it might make sense for me (Eli) to get access to the server (read-only login so I can ftp out) and I put files on Source Coop. If you prefer, I can help you get set up on Source Coop but we should have a 1 hour meeting for me to help you get all set up with the authentication step.
 
-| Route | Who runs the copy | What PacIOOS provides | When |
+| Route | Who runs the copy | What PacIOOS provides | Notes |
 | --- | --- | --- | --- |
-| **A. Eli copies (recommended now)** | Eli, logged in to the PacIOOS server | A read-only login | First copy, within 8 days |
-| B. PacIOOS runs Eli's script | PacIOOS staff | Someone to run one command | Fallback if a login is not possible |
-| C. PacIOOS uploads on its own | PacIOOS staff, daily | A Source Cooperative account | After the first copy |
+| A. Eli copies | Eli, logged in to the PacIOOS server | A read-only login for a week | Eli uploads first copy to Source Coop and then walks PacIOOS staff through the steps at the hackathon. |
+| B. PacIOOS uploads on its own | PacIOOS staff | A Source Cooperative account | This requires getting the Source Coop account and then getting authentication set up. Not hard, but a little finicky and might be easier to do together online. |
 
-Route A puts the least work on PacIOOS: one account, then Eli does the rest. Route B avoids an account but needs a staff member's time each day the copy runs. Route C is the end goal; it needs a few more sign-up steps, so it can wait until after the deadline.
+Route A puts the least work on PacIOOS: one account, then Eli does the rest. Route B avoids an account but needs a bit more pre-work.
 
 Proposed schedule (drawn as a timeline in the doc):
 
@@ -64,12 +63,12 @@ The copy itself needs one to two days; the extra day absorbs a slow link or a re
 
 PacIOOS sets up one login; Eli handles everything after that.
 
-- [ ] **Create a login for Eli** on a machine that can read the model files. It needs read-only access to the model data folders and nothing else. Eli sends a public SSH key, so no password is shared.
+- [ ] **Create a login for Eli** on the server. It needs read-only access to the model data folders and nothing else. Eli sends a public SSH key, so no password is shared.
 - [ ] **Tell Eli the folder paths** for the ROMS, WW3 and WRF files.
 - [ ] **Check that the machine can reach the internet over HTTPS** (port 443) to `data.source.coop`. Some servers block outgoing connections.
-- [ ] **Agree a speed cap and quiet hours** (see Ground rules below).
+- [ ] **Agree a speed cap and quiet hours** (if desired).
 - [ ] **Set an end date** for the login, for example two weeks after the copy finishes.
-- [ ] If UH IT requires it, **sponsor a guest account**. Eli is at the University of Washington and NOAA, so she has no UH account.
+- [ ] If UH IT requires it, **sponsor a guest account**. Eli is at the University of Washington and NOAA, so she has no UH account. Note, my son is a graduate student in the marine science depart at UH and is working on ocean model data, if that makes things easier.
 
 What Eli does from that login:
 
@@ -78,37 +77,15 @@ What Eli does from that login:
 3. Runs the full copy with `rclone`, a widely used copy tool. It is a single program file in her own folder, so nothing is installed on the server. It resumes after a dropped connection and checks every file arrived intact.
 4. Uses temporary Source Cooperative keys that expire after about a day. She creates them on her own computer, so no long-lived password sits on the PacIOOS machine.
 
-## Route B: PacIOOS runs Eli's script
-
-If a login is not possible, Eli sends a short script and a key file, and a PacIOOS staff member runs one command.
-
-- **No Source Cooperative account needed.** Eli creates the temporary key file on her side and sends it privately. The script reads it.
-- **The key expires after about a day.** If the copy is not finished, Eli sends a fresh key file and the same command picks up where it stopped.
-- **The script only reads PacIOOS files.** It copies them out with `rclone` and never changes or deletes anything on the server.
-- **What staff need:** a terminal on the machine with the files, the folder paths, and about 15 minutes to start the copy and check on it.
-
-The key file grants write access to the project on Source Cooperative while it is valid, so keep it private and delete it when the copy is done.
-
-## Route C, the end goal: PacIOOS uploads its own new files
+## Route B, the end goal: PacIOOS uploads its own new files
 
 Once the archive is in place, the only ongoing job is copying each day's new model runs, about 3 GB a day in total. That takes a minute or two and can be the last step of the existing daily forecast job.
 
-1. A PacIOOS staff member signs up at [Source Cooperative](https://source.coop) and Eli adds them to the project with upload rights.
-2. They install Source Cooperative's command-line login tool, which hands out temporary upload keys.
-3. The daily job runs the same `rclone` copy as Route A, which sends only the files not yet uploaded.
+1. A PacIOOS staff member signs up at [Source Cooperative](https://source.coop) and Eli adds them to the [Ocean Icechunks](https://source.coop/ocean-icechunks) org with upload rights. Or PacIOOS applies for beta tester status and creates their own PacIOOS org within Source Coop.
+2. They install Source Cooperative's command-line login tool, which hands out temporary upload keys. Eli has scripts and examples.
+3. Run the `rclone` scripts as Route A, which will upload files.
 
-The one awkward step is the login tool's sign-in: it opens a web page, which a server with no browser cannot show. Eli will work through it with PacIOOS after the deadline; it is not needed for the first copy.
-
-## Ground rules
-
-The copy must not slow the public forecast service, so it runs under these limits.
-
-- **Speed cap.** The copy runs at a fixed limit, for example half the server's network speed. PacIOOS picks the number.
-- **Quiet hours.** No copying while the daily forecast is being produced and published (around 1:30 PM HST). PacIOOS confirms the hours.
-- **Read-only.** Nothing on the PacIOOS server is changed, moved or deleted.
-- **Finished files only.** A forecast run still being written is skipped and picked up on the next pass.
-- **Checked copies.** Every file is compared with the original after upload.
-- **Account removed afterwards.** The login ends on the agreed date.
+The one awkward step is the Source Coop login tool's sign-in: it opens a web page, which a server with no browser cannot show. After the hackathon, we can help you work with Source Coop to get an ARN setup for auto-updating. That is what we do with the [NOAA OISST icechunk](https://source.coop/ocean-icechunks/noaa-oisst) on Source Coop.
 
 ## Questions for PacIOOS
 
@@ -119,8 +96,6 @@ The copy must not slow the public forecast service, so it runs under these limit
 - [ ] Route A or Route B?
 - [ ] Should every past forecast run be copied, or only the series the website shows?
 
-## Not yet tested
+## Connection to EarthMover
 
-- Uploading to Source Cooperative with `rclone`, including files of about 2 GB. The first day starts with a one-file test.
-- Whether a one-day key lasts through each copy session. If not, the copy pauses and resumes with a new key.
-- The sizes, which were worked out from the public metadata, not from the files themselves.
+We have a Community Organization on EarthMover for Ocean Icechunks and have a pipeline for auto adding/linking the icechunks on our Ocean Icechunk Source Coop org to the EarthMover org --- if you want to go that route. We can help with setting up a PacIOOS community org on EarthMover or use the existing Ocean Icechunk org.
