@@ -81,6 +81,17 @@ compared). NOAA OISST got a README and a viewer.
 
 ## Open threads
 
+- **PacIOOS Hawaiʻi models (ROMS, WW3, WRF) — research and plans only, nothing built
+  (2026-11-10, PR #35).** Their THREDDS/ERDDAP expose no files, so the plan is to copy the
+  NetCDFs unchanged to Source Cooperative before the **2026-11-17 hackathon**, then build
+  virtual stores there. Two PacIOOS-facing Claude Docs that Eli edits and shares; the
+  `claude/notes` copies are snapshots, the docs are live:
+  [transfer plan](https://claude.ai/artifact/4Nqhx91MozRLbfjYXmfpP7) and
+  [virtual-Icechunk explainer](https://claude.ai/artifact/BTCTko294KTQebZW6Y2K4o).
+  Eli is new to server terms (THREDDS, ERDDAP, NcML); explain plainly. Unknown until a raw
+  file is in hand: the native chunk layout, hence point-time-series speed, and what the
+  NcML adds (diff the raw header against the THREDDS `.das`). Related skill PR:
+  nmfs-opensci/agent-skills#39.
 - Watch ocean-icechunks/noaa_oisst#2 for the maintainers' reply; if the store is fixed, the
   OISST README's caveats and its 7 s open time need revisiting and re-mirroring. Eli's
   cross-repo to-do list from 2026-09-19 is in `~/hycom/claude/notes/todo.md`.
@@ -117,3 +128,6 @@ compared). NOAA OISST got a README and a viewer.
 - [gobai-o2-monthly.md](notes/gobai-o2-monthly.md) — what that cleanup found
 - [oa-indicators.md](notes/oa-indicators.md) — what that build found
 - [ohc-rebuild-2026-08-26.md](notes/ohc-rebuild-2026-08-26.md) — the CoastWatch rebuild record
+- [pacioos-roms.md](notes/pacioos-roms.md) — PacIOOS server probe, sizes, chunking, transfer estimates, options
+- [pacioos-transfer-plan.md](notes/pacioos-transfer-plan.md) — snapshot of the lay transfer plan doc
+- [pacioos-virtual-icechunk-explainer.md](notes/pacioos-virtual-icechunk-explainer.md) — snapshot of the lay "how a virtual store is made" doc
