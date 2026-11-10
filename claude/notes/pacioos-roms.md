@@ -75,6 +75,73 @@ downloaded from ERDDAP does not carry the source's HDF5 chunking.
 Compression of one `temp` step (10% NaN land): zlib 1.39×, blosc-zstd+shuffle 1.94×,
 plus rounding to 0.001 °C 2.2×. A materialized reanalysis would be ~550–600 GB.
 
+## Moving the files to object storage (GCS) — estimates
+
+The ~0.8 MB/s above is **THREDDS's per-request cost**: it reads the HDF5, decompresses and
+re-encodes as OPeNDAP. A plain file copy (HTTPS `fileServer`, rsync, `gcloud storage cp` run
+on their host) skips all of that and is limited by the network. That number has not been
+measured; the estimates below are guesses until it is.
+
+Volume (raw float32; roughly half if their files are deflated on disk):
+
+| Set | Raw |
+|---|---|
+| Reanalysis 2009–2020 | ~1.2 TB |
+| Hindcast 2015 → present | ~1.1 TB |
+| Forecast, all 651 runs kept with overlaps | ~1.2 TB |
+| Forecast, "best" series only | ~0.2 TB |
+| 2-D `zeta`, all sets | ~0.1 TB |
+| **Total** | **~2.5–3.5 TB** |
+
+| Sustained rate | 1 TB | All (~3 TB) |
+|---|---|---|
+| 0.8 MB/s (today's OPeNDAP) | ~15 days | ~6 weeks |
+| 10 MB/s (slow or shared link) | ~28 h | ~3.5 days |
+| 100 MB/s (≈1 Gbps) | ~3 h | ~8–9 h |
+| 500 MB/s (10 Gbps, parallel streams) | ~35 min | ~2 h |
+
+UH is on Internet2, so hours to about a day for everything is the plausible range, provided the
+copy runs on their host or uses parallel streams. A single trans-Pacific HTTPS stream often
+tops out at tens of MB/s.
+
+Routes, easiest first:
+
+1. **They push**: `gcloud storage cp -r` / `rclone` from their server into a bucket we give
+   them write access to. One hop, nothing exposed publicly.
+2. **Storage Transfer Service, URL list**: needs `fileServer` on, with **public** URLs. GCS
+   pulls them in parallel and checks each file's MD5. No VM needed.
+3. **We pull from a GCP VM** (US-West) with `aria2c`/`rclone`, 8–16 streams. Ingress is
+   free. Do not route through the hub (20 GiB home quota, shared machine).
+
+Cost: ingress free; standard storage ~$20/TB-month (≈$60/month for everything), or nothing
+in a NODD bucket.
+
+To turn this table into a real estimate, time one ~2 GB forecast-run file over `fileServer`
+(`curl -o /dev/null -w '%{speed_download}'`), or ask their sysadmin for the uplink speed.
+
+## Turning `fileServer` on temporarily — risks
+
+Raised 2026-11-10 as a 2–3 day window for the copy. The risks, roughly by likelihood:
+
+- **Scrapers and bots.** THREDDS servers are crawled heavily, so direct whole-file
+  downloads can saturate the link and slow the public forecast service. Mitigations: an
+  Apache IP allowlist on `/thredds/fileServer/`, or keep `HTTPServer` out of the public
+  catalog. Note that an allowlist is incompatible with route 2, since Google's
+  transfer IPs are not fixed; use route 3 from a VM with a static IP instead.
+- **Disk I/O contention** with the daily forecast job if the copy runs many streams.
+  Cap the concurrency, or copy outside the ~1:30 PM HST update window.
+- **Inconsistent copies.** A forecast run being written, or purged by the rolling window,
+  during the copy gives a truncated or missing file. Copy completed runs only, and verify
+  size/MD5 afterwards.
+- **TDS 4.6 is long out of support.** Any extra endpoint on an unpatched server is extra
+  attack surface. Their hidden-`location` setting suggests a deliberate policy, and
+  `fileServer` URLs reveal the directory layout under the scan root (not absolute paths).
+- **A temporary `fileServer` cannot back a virtual store.** Once it is turned off, any
+  references into it break. A temporary window means *copy*, then build virtual against
+  the bucket (option 1b), never virtual against PacIOOS.
+
+Route 1 (they push) avoids every one of these, which makes it the first thing to ask for.
+
 ## Options, best first
 
 1. **PacIOOS exposes the files** (no download through OPeNDAP):
