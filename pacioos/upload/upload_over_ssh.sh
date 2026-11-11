@@ -44,7 +44,9 @@ echo "Logging to $log"
 # Hours until the current Source Cooperative keys expire (prints only the number, never the keys).
 key_hours_left() {
   local exp
-  exp=$("$SOURCE_COOP" creds | python3 -c 'import json,sys; print(json.load(sys.stdin)["Expiration"])')
+  exp=$("$SOURCE_COOP" creds 2>/dev/null |
+        python3 -c 'import json,sys; print(json.load(sys.stdin)["Expiration"])' 2>/dev/null) || return 1
+  [[ -n $exp ]] || return 1
   awk -v s="$(( $(date -d "$exp" +%s) - $(date +%s) ))" 'BEGIN { printf "%.2f", s / 3600 }'
 }
 
@@ -59,12 +61,19 @@ remote_input() {
   printf '\n}\n'
 }
 
+need_login() {
+  echo "=== Could not get Source Cooperative keys: the login has probably expired." | tee -a "$log"
+  echo "=== Log in again (source-coop login), then rerun this script; finished files are skipped." \
+    | tee -a "$log"
+  exit 3
+}
+
 for run in $(seq 1 "$MAX_RUNS"); do
-  left=$(key_hours_left)
+  left=$(key_hours_left) || need_login
   if awk -v l="$left" 'BEGIN { exit !(l < 1) }'; then   # under an hour: let them expire, then renew
     echo "=== keys expire in $left h; waiting for them to expire so fresh ones are issued" | tee -a "$log"
     sleep $(awk -v l="$left" 'BEGIN { s = int(l * 3600) + 90; print (s > 90 ? s : 90) }')
-    left=$(key_hours_left)
+    left=$(key_hours_left) || need_login
   fi
   # Stop starting new files half an hour before the keys expire (a file takes a few minutes).
   hours=$(awk -v l="$left" -v r="$RUN_HOURS" 'BEGIN { h = l - 0.5; if (h > r) h = r; printf "%.2f", h }')
