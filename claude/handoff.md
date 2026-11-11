@@ -92,6 +92,18 @@ compared). NOAA OISST got a README and a viewer.
   file is in hand: the native chunk layout, hence point-time-series speed, and what the
   NcML adds (diff the raw header against the THREDDS `.das`). Related skill PR:
   nmfs-opensci/agent-skills#39.
+  - **Upload under way (2026-11-11, branch `pacioos-upload`, #36, #37).** Forecast done;
+    WRF/WW3 running; reanalysis next. Layout and versioning decisions are in #37.
+  - **To fix in `notes/pacioos-roms.md` once the upload work is done.** It predates the server
+    account, and the server contradicts it in places:
+    - The hindcast (`roms_hiig_assim`) is **3.37 TB** on disk (4,045 daily 3-day runs), not
+      ~1.1 TB.
+    - The forecast and hindcast are **NetCDF-3**, not HDF5. The reanalysis is
+      **uncompressed** NetCDF-4, with chunks `(1, 36, 195, 295)` and one file per day.
+    - There is an unexplained `hiig_replacement_files` set: 0.87 TB, compressed HDF5.
+    - The reanalysis files carry **no version** attribute.
+    - Other regions exist on disk: Samoa and western-Pacific hindcasts, and 7 forecast regions.
+    - Recheck the size table and the "HYCOM trick" rows against real headers.
 - Watch ocean-icechunks/noaa_oisst#2 for the maintainers' reply; if the store is fixed, the
   OISST README's caveats and its 7 s open time need revisiting and re-mirroring. Eli's
   cross-repo to-do list from 2026-09-19 is in `~/hycom/claude/notes/todo.md`.
