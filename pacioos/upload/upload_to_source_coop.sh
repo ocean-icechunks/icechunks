@@ -8,19 +8,29 @@
 #
 #   ./upload_to_source_coop.sh --dry-run roms_hiig      # show what would be uploaded
 #   ./upload_to_source_coop.sh roms_hiig wrf_hi         # upload two products
-#   ./upload_to_source_coop.sh roms_hiig_assim=/some/folder   # a product not listed below
+#   ./upload_to_source_coop.sh my_product=/some/folder   # a product not listed below
+#
+# Where files go:  DEST/<product>/netcdf/[<version>/]<path under the product's folder>
+#   e.g. .../hiig/2026/hiig_forec_20261109.nc -> pacioos/roms_hiig/netcdf/2026/hiig_forec_20261109.nc
+#   Products that come in versions (see VERSION below) get a folder per version, so a new
+#   version never lands on top of an old one. pacioos/<product>/icechunk/ is left for the
+#   Icechunk store built over these files.
 #
 # For every file it:
-#   1. skips it if it is already on Source Cooperative (same size, with its .md5 file;
-#      a file changed later without changing size is NOT noticed, as model output isn't edited),
-#   2. skips it if it was modified in the last MIN_AGE_MINUTES (it may still be being written),
-#   3. computes its MD5 checksum,
-#   4. uploads it,
-#   5. checks the uploaded size, then uploads "<file>.md5" next to it. A .md5 file therefore
+#   1. skips it if its upload already finished (there is a .md5 file next to it on Source
+#      Cooperative, and the sizes match),
+#   2. leaves it alone and reports CHANGED if its upload finished but the size here is now
+#      different. A finished copy is NEVER overwritten, because Icechunk stores point into
+#      these files. A changed file needs a person to decide (a new version? a correction?).
+#      Note: a file changed without changing size is NOT noticed.
+#   3. skips it if it was modified in the last MIN_AGE_MINUTES (it may still be being written),
+#   4. computes its MD5 checksum,
+#   5. uploads it,
+#   6. checks the uploaded size, then uploads "<file>.md5" next to it. A .md5 file therefore
 #      means "this upload finished". Anyone can check a file with `md5sum -c <file>.md5`.
 #
 # So the script can be stopped at any time and run again: it carries on where it left off.
-# One line per file is printed: OK, SKIP or FAIL. Save it if you want a record, e.g.
+# One line per file is printed: OK, SKIP, FAIL or CHANGED. Save it if you want a record, e.g.
 #   ./upload_to_source_coop.sh roms_hiig 2>&1 | tee -a upload.log
 #
 # ---------------------------------------------------------------------------------------------
@@ -50,7 +60,11 @@
 #   MAX_HOURS=0         stop starting new files after this many hours (0 = no limit)
 #   MIN_AGE_MINUTES=120 leave files younger than this alone
 #   DEST=ocean-icechunks/pacioos   where on Source Cooperative ("account/product")
+#   VERSION=            version folder for every product in this run, e.g. VERSION=v3.0;
+#                       overrides the VERSION table below. Leave unset normally.
 #   RCLONE=rclone       the rclone program to use
+#
+# Exit status: 0 all done; 2 some files failed (run again); 4 some files CHANGED (see above).
 # ---------------------------------------------------------------------------------------------
 
 set -euo pipefail
@@ -61,6 +75,16 @@ declare -A SOURCE_DIR=(
   [roms_hiig]=/export/data/model/ocn/roms_forecast/hiig     # ROMS ocean forecast, Main Hawaiian Islands
   [wrf_hi]=/export/data/model/atm/wrf_hi                    # WRF atmosphere, Main Hawaiian Islands
   [ww3_hawaii]=/export/data/model/ore/ww3/hawaii            # WaveWatch III waves, Hawaiʻi
+  [roms_hiig_reanalysis]=/export/data/model/ocn/roms_reanalysis/hiig   # ROMS reanalysis 2009-2020
+  [roms_hiig_assim]=/export/data/model/ocn/roms_assim/hiig  # ROMS data-assimilating hindcast
+)
+
+# Products that are released in versions, and the version now in SOURCE_DIR. Their files go
+# under netcdf/<version>/. The files themselves carry no version number; this one is from
+# PacIOOS's THREDDS/ERDDAP description. When a new version comes out, upload it with
+# VERSION=<new> (and the new folder, if it has one); the old version's copies stay as they are.
+declare -A PRODUCT_VERSION=(
+  [roms_hiig_reanalysis]=v2.0
 )
 
 PARALLEL=${PARALLEL:-2}
@@ -68,6 +92,7 @@ MAX_HOURS=${MAX_HOURS:-0}
 MIN_AGE_MINUTES=${MIN_AGE_MINUTES:-120}
 DEST=${DEST:-ocean-icechunks/pacioos}
 RCLONE=${RCLONE:-rclone}
+VERSION=${VERSION:-}
 
 usage() { sed -n '3,12p' "$0" 2>/dev/null || true; echo "Products: ${!SOURCE_DIR[*]}"; exit 1; }
 
@@ -119,7 +144,7 @@ STOP_AT=0
 # Upload one file. Arguments: product, path relative to the product's folder.
 upload_one() {
   local product=$1 rel=$2
-  local src="${SOURCE_DIR_OF_PRODUCT}/$rel" dst="sc:$DEST/$product/$rel" name=${rel##*/}
+  local src="${SOURCE_DIR_OF_PRODUCT}/$rel" dst="sc:${DEST_OF_PRODUCT}/$rel" name=${rel##*/}
   if (( STOP_AT > 0 && $(date +%s) >= STOP_AT )); then
     echo "SKIP  $product/$rel  (MAX_HOURS reached; run again to continue)"; return 0
   fi
@@ -147,22 +172,27 @@ export RCLONE DEST STOP_AT
 echo "Started $(date '+%F %T %Z') on $(hostname) — products: ${PRODUCTS[*]} — parallel: $PARALLEL" \
      "— dry run: $DRY_RUN"
 
-ok_n=0; fail_n=0; skip_n=0
+ok_n=0; fail_n=0; skip_n=0; changed_n=0
 for product in "${PRODUCTS[@]}"; do
   dir=${SOURCE_DIR[$product]}
   [[ -d $dir ]] || { echo "Folder not found for $product: $dir"; exit 1; }
+  version=${VERSION:-${PRODUCT_VERSION[$product]:-}}
+  dest="$DEST/$product/netcdf${version:+/$version}"
+  echo "$product: $dir -> $dest/"
 
   # What is already finished on Source Cooperative: NetCDF sizes, and which .md5 files exist.
   declare -A remote_size=() has_md5=()
   while IFS=';' read -r path rsize; do
     if [[ $path == *.md5 ]]; then has_md5[${path%.md5}]=1; else remote_size[$path]=$rsize; fi
-  done < <("$RCLONE" lsf -R --files-only --format "ps" --separator ";" "sc:$DEST/$product/" 2>/dev/null || true)
+  done < <("$RCLONE" lsf -R --files-only --format "ps" --separator ";" "sc:$dest/" 2>/dev/null || true)
 
   # What is here, and what still needs uploading.
-  todo=(); todo_bytes=0; done_n=0; young_n=0
+  todo=(); todo_bytes=0; done_n=0; young_n=0; changed=()
   while IFS=$'\t' read -r rel lsize mtime; do
-    if [[ ${remote_size[$rel]:-} == "$lsize" && -n ${has_md5[$rel]:-} ]]; then
+    if [[ -n ${has_md5[$rel]:-} && ${remote_size[$rel]:-} == "$lsize" ]]; then
       done_n=$((done_n + 1))
+    elif [[ -n ${has_md5[$rel]:-} ]]; then
+      changed+=("$rel  (size here $lsize, on Source Cooperative ${remote_size[$rel]:-missing})")
     elif (( $(date +%s) - ${mtime%.*} < MIN_AGE_MINUTES * 60 )); then
       young_n=$((young_n + 1))
     else
@@ -171,14 +201,17 @@ for product in "${PRODUCTS[@]}"; do
   done < <(cd "$dir" && find . -type f -name '*.nc' -printf '%P\t%s\t%T@\n' | sort)
 
   echo "$product: ${#todo[@]} files to upload ($((todo_bytes / 1000000000)) GB)," \
-       "$done_n already on Source Cooperative, $young_n too new (under $MIN_AGE_MINUTES min old)"
+       "$done_n already on Source Cooperative, $young_n too new (under $MIN_AGE_MINUTES min old)," \
+       "${#changed[@]} changed"
+  for c in "${changed[@]}"; do echo "CHANGED  $product/$c  -- left alone; a finished copy is never overwritten"; done
+  changed_n=$((changed_n + ${#changed[@]}))
   if (( DRY_RUN )); then
     for rel in "${todo[@]:0:5}"; do echo "  would upload $rel"; done
     (( ${#todo[@]} > 5 )) && echo "  ... and $(( ${#todo[@]} - 5 )) more"
     unset remote_size has_md5; continue
   fi
 
-  export SOURCE_DIR_OF_PRODUCT=$dir
+  export SOURCE_DIR_OF_PRODUCT=$dir DEST_OF_PRODUCT=$dest
   if (( ${#todo[@]} )); then
     while IFS= read -r line; do
       echo "$line"
@@ -188,5 +221,11 @@ for product in "${PRODUCTS[@]}"; do
   unset remote_size has_md5
 done
 
-echo "Finished $(date '+%F %T %Z'): $ok_n uploaded, $fail_n failed, $skip_n left for the next run"
+echo "Finished $(date '+%F %T %Z'): $ok_n uploaded, $fail_n failed, $skip_n left for the next run," \
+     "$changed_n changed"
 (( fail_n == 0 )) || { echo "Some files failed. Run the script again to retry them."; exit 2; }
+if (( changed_n > 0 )); then
+  echo "Some files CHANGED since they were uploaded and were left alone. A person needs to decide"
+  echo "what they are: a new version (upload with VERSION=...), or a correction. See the top of this script."
+  exit 4
+fi

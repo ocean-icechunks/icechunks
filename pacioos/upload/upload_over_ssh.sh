@@ -25,6 +25,7 @@
 #   MAX_RUNS        give up after this many runs (default 20)
 #   LOG_DIR         where logs go (default: ./logs next to this script)
 #   SOURCE_COOP     the source-coop CLI here (default: source-coop)
+#   VERSION         passed on to upload_to_source_coop.sh (version folder; normally unset)
 #
 # Any arguments are passed on to upload_to_source_coop.sh (product names, --dry-run).
 
@@ -55,7 +56,8 @@ key_hours_left() {
 # accidentally read the rest of the stream.
 remote_input() {
   "$SOURCE_COOP" creds --format env                 # export AWS_ACCESS_KEY_ID=... etc.
-  printf 'export RCLONE=%q PARALLEL=%q MAX_HOURS=%q\n' "$REMOTE_RCLONE" "$PARALLEL" "$hours"
+  printf 'export RCLONE=%q PARALLEL=%q MAX_HOURS=%q VERSION=%q\n' \
+    "$REMOTE_RCLONE" "$PARALLEL" "$hours" "${VERSION:-}"
   printf '{\nexec </dev/null\n'
   cat "$here/upload_to_source_coop.sh"
   printf '\n}\n'
@@ -85,6 +87,10 @@ for run in $(seq 1 "$MAX_RUNS"); do
   last=$(grep '^Finished' "$log" | tail -1 || true)
   if [[ $status -eq 0 && $last == *" 0 failed, 0 left"* ]]; then
     echo "=== all done" | tee -a "$log"; exit 0
+  fi
+  if [[ $status -eq 4 ]]; then   # files changed on the server: rerunning won't help, a person decides
+    echo "=== stopped: some files CHANGED since they were uploaded (see the CHANGED lines above)." \
+      | tee -a "$log"; exit 4
   fi
   [[ " $* " == *" --dry-run "* ]] && exit "$status"
   echo "=== run $run ended (status $status): ${last:-no summary, connection probably dropped}." \

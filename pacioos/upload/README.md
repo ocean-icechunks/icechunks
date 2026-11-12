@@ -15,15 +15,33 @@ built over the copies, so readers use Source Cooperative instead of the PacIOOS 
 
 | Product | Folder on the PacIOOS server | On Source Cooperative | Files | Size |
 | --- | --- | --- | --- | --- |
-| `roms_hiig` | `/export/data/model/ocn/roms_forecast/hiig` | `pacioos/roms_hiig/` | 651 | 1.24 TB |
-| `wrf_hi` | `/export/data/model/atm/wrf_hi` | `pacioos/wrf_hi/` | 5,605 | 0.93 TB |
-| `ww3_hawaii` | `/export/data/model/ore/ww3/hawaii` | `pacioos/ww3_hawaii/` | 5,231 | 0.49 TB |
+| `roms_hiig` (forecast) | `/export/data/model/ocn/roms_forecast/hiig` | `pacioos/roms_hiig/netcdf/` | 652 | 1.24 TB |
+| `wrf_hi` | `/export/data/model/atm/wrf_hi` | `pacioos/wrf_hi/netcdf/` | 5,607 | 0.94 TB |
+| `ww3_hawaii` | `/export/data/model/ore/ww3/hawaii` | `pacioos/ww3_hawaii/netcdf/` | 5,232 | 0.49 TB |
+| `roms_hiig_reanalysis` | `/export/data/model/ocn/roms_reanalysis/hiig` | `pacioos/roms_hiig_reanalysis/netcdf/v2.0/` | 4,380 | 1.17 TB |
+| `roms_hiig_assim` (hindcast) | `/export/data/model/ocn/roms_assim/hiig` | `pacioos/roms_hiig_assim/netcdf/` | 4,045 | 3.37 TB |
 
-Counts as of 2026-11-10. Each folder holds one subfolder per year, and the same layout is kept on
-Source Cooperative: for example, `.../hiig/2026/hiig_forec_20261109.nc` becomes
-`pacioos/roms_hiig/2026/hiig_forec_20261109.nc`. To add another product, add a line to
-`SOURCE_DIR` near the top of `upload_to_source_coop.sh`, or name it on the command line as
-`name=/folder`.
+Counts as of 2026-11-12. Product names are PacIOOS's THREDDS/ERDDAP dataset IDs.
+
+**Layout.** Each dataset has its own folder on Source Cooperative, with the original files under
+`netcdf/` and the Icechunk store built over them under `icechunk/`:
+
+```
+pacioos/roms_hiig/netcdf/2026/hiig_forec_20261109.nc      (+ .md5)
+pacioos/roms_hiig/icechunk/
+```
+
+The year folders on the PacIOOS server are kept as they are under `netcdf/`. To add another
+product, add a line to `SOURCE_DIR` near the top of `upload_to_source_coop.sh`, or name it on
+the command line as `name=/folder`.
+
+**Versions.** A product released in versions, so far only the reanalysis, gets one folder per
+version: `netcdf/v2.0/`, later `netcdf/v3.0/`. The version is set in `PRODUCT_VERSION` in the
+script. The reanalysis files carry no version number of their own, so `v2.0` comes from
+PacIOOS's THREDDS description. To upload a new version, run with `VERSION=v3.0` (and the new
+folder, if it has one, as `roms_hiig_reanalysis=/new/folder`). The old version's copies are not
+touched. What to do when versions or files change is worked through in
+[issue #37](https://github.com/ocean-icechunks/icechunks/issues/37).
 
 ## Running the upload on the PacIOOS server
 
@@ -48,6 +66,10 @@ Source Cooperative: for example, `.../hiig/2026/hiig_forec_20261109.nc` becomes
 **What it does for each file:**
 - **Skips** the file if it is already on Source Cooperative, or if it changed in the last 2 hours
   (it may still be being written).
+- **Never overwrites a finished copy.** If a file's size on the server no longer matches its
+  copy, it prints `CHANGED`, leaves both alone, and exits with status 4 at the end. The
+  Icechunk stores point into these copies, so a person decides what the change is (a new
+  version, or a correction). A change that keeps the same size is not noticed.
 - **Computes its MD5 checksum, then uploads it.** Both steps run at the lowest CPU and disk
   priority, so the server's own work comes first.
 - **Checks the uploaded size, then uploads a small `<file>.md5`** next to it. A `.md5` file
@@ -65,8 +87,8 @@ stop, press Ctrl+C.
 ## Checking the copies
 
 ```bash
-python3 verify_source_coop_copy.py pacioos/roms_hiig/                 # every file
-python3 verify_source_coop_copy.py pacioos/roms_hiig/ --sample 20     # a random 20
+python3 verify_source_coop_copy.py pacioos/roms_hiig/netcdf/                 # every file
+python3 verify_source_coop_copy.py pacioos/roms_hiig/netcdf/ --sample 20     # a random 20
 python3 verify_source_coop_copy.py pacioos/ --list-only               # what's there, no downloads
 ```
 

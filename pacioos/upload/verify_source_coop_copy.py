@@ -6,8 +6,8 @@ packages. It downloads each file over public HTTPS, computes its MD5 as the byte
 is saved to disk), and compares the result with the checksum that `upload_to_source_coop.sh`
 computed on the source machine before uploading.
 
-    python3 verify_source_coop_copy.py pacioos/roms_hiig/            # every file in a product
-    python3 verify_source_coop_copy.py pacioos/roms_hiig/2026/ --sample 10   # a random 10
+    python3 verify_source_coop_copy.py pacioos/roms_hiig/netcdf/            # every file in a product
+    python3 verify_source_coop_copy.py pacioos/roms_hiig/netcdf/2026/ --sample 10   # a random 10
     python3 verify_source_coop_copy.py pacioos/ --list-only          # sizes and .md5s, no downloads
 
 One line per file is printed:
@@ -86,7 +86,7 @@ def check(account, key, size, expected):
 
 def main():
     p = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    p.add_argument("prefix", help="product folder to check, e.g. pacioos/roms_hiig/")
+    p.add_argument("prefix", help="product folder to check, e.g. pacioos/roms_hiig/netcdf/")
     p.add_argument("--account", default="ocean-icechunks", help="Source Cooperative account")
     p.add_argument("--sample", type=int, default=0, help="check only this many files, at random")
     p.add_argument("--parallel", type=int, default=4, help="files downloaded at the same time")
