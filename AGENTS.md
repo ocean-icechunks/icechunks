@@ -9,12 +9,14 @@ Read `claude/handoff.md` first: it has where each store stands and the open work
 
 ## What this repo is
 
-Jupyter notebooks that publish NOAA ocean datasets as Icechunk repositories on Source Cooperative. Three datasets, built two different ways:
+Jupyter notebooks that publish NOAA ocean datasets as Icechunk repositories on Source Cooperative. Four datasets, built two different ways:
 
 - `coastwatch-heat-content/` — **virtual**: the pattern **source NetCDF files → VirtualiZarr (virtual references) → Icechunk repository**, applied to the NOAA CoastWatch Ocean Heat Content archive. The large science arrays are never copied; Icechunk stores metadata and byte-range references back to the originals.
 - `gobai-o2-monthly/` — **materialized**: GOBAI-O2 v2.3 monthly from NCEI, written as real Zarr v3 chunks with `Dataset.to_zarr`. Virtualizing would buy nothing there — the source is a single 12 GB contiguous, uncompressed NetCDF with no chunk boundaries to reference. Keep the two straight: the virtual gotchas below (virtual chunk containers, `url_prefix`, `authorize_virtual_chunk_access`) do not apply to it at all.
 
 - `oa-indicators/` — **virtual**: NCEI accession 0270962, the ocean-acidification-indicator climatology on the North American margins. Same pattern as CoastWatch, but the merge problem is the opposite one: the source is **one indicator per NetCDF file**, twelve files on a byte-identical grid, merged into a single flat group of 72 variables. No time dimension — it is a climatology.
+
+- `noaa-gomofs/` — **virtual**: NOAA NOS GoMOFS (Gulf of Maine ROMS), from NetCDF-4 in `s3://noaa-nos-ofs-pds` (us-east-1). Two stores, `ocean-icechunks/noaa-gomofs/timeseries-3d` (3-hourly) and `timeseries-2d` (hourly), one `time` dimension, built by an AWS backfill and kept current by the GitHub Actions in <https://github.com/ocean-icechunks/noaa_gomofs> (that repo, not this one, holds the updater and the initialization method). NOAA deletes its oldest files about a day a day, so the stores need periodic rebuilds. The scripts here are the earlier local builders; notes in `claude/notes/noaa-gomofs.md`.
 
 - `noaa-oisst/` — **a README and a viewer only; the store is not built here.** NOAA OISST v2.1 at `ocean-icechunks/noaa-oisst/oisst.icechunk` is built and updated about daily by NERACOOS/GMRI (Alex Kerney; <https://github.com/ocean-icechunks/noaa_oisst>, which as of 2026-09-19 holds only its project README). One repository, a virtual `daily` group with `s3://` references into NOAA's CDR bucket (so readers authorize with `s3_anonymous_credentials()`, not `HttpAccess`) and a materialized `monthly` group. Its README here was written by inspecting the published store. Never write under `noaa-oisst/oisst.icechunk/`.
 
@@ -24,7 +26,7 @@ Sibling repos apply the virtual pattern to other datasets — see "Skills and re
 
 Where each store stands, and what is unfinished, is in `claude/handoff.md`. Build records
 (snapshot ids, coverage, object counts) are in the per-dataset notes:
-`claude/notes/ohc-rebuild-2026-08-26.md`, `gobai-o2-monthly.md`, `oa-indicators.md`.
+`claude/notes/ohc-rebuild-2026-08-26.md`, `gobai-o2-monthly.md`, `oa-indicators.md`, `noaa-gomofs.md`.
 Status was kept here until 2026-10-02 and moved out to keep this file under Antigravity's
 size limit.
 
