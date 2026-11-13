@@ -40,5 +40,5 @@ Eli — remains the norm; this is simply a case where both halves are done.
 The pair of results was worth more than the store. This viewer drawing while the CoastWatch
 one does not, from the same repository host, is the two-host CORS model confirmed with a
 diagnosable symptom: coordinates are real chunks in the repository and render, science arrays
-are virtual and do not. Both are now cited in the `virtual-icechunk` skill (PR #13 there),
+are virtual and do not. Both are now cited in the `virtual-icechunk` skill (nmfs-opensci/agent-skills PR #13, before the skill moved to ocean-icechunks/ocean-icechunks-skills),
 which had been asserting the opposite.

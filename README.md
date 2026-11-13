@@ -146,7 +146,7 @@ exception: it runs end to end with no credentials and writes nothing unless you 
 
 ## Related
 
-- **[`virtual-icechunk` skill](https://github.com/nmfs-opensci/agent-skills)** — shared
+- **[`virtual-icechunk` skill](https://github.com/ocean-icechunks/ocean-icechunks-skills)** — shared
   guidance for building, validating and auditing virtual Icechunk stores.
 - Sibling repositories apply the same pattern to NOAA CEFI, PACE, RFROM / GOBAI HR and
   Copernicus GlobColour data. In particular

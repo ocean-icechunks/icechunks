@@ -73,7 +73,7 @@ checksum.
 
 ## Skills and related repos
 
-- **`virtual-icechunk` skill** — <https://github.com/nmfs-opensci/agent-skills> (`skills/virtual-icechunk/`, checked out locally at `~/agent-skills`). The shared, agent-independent guidance for building, validating, documenting and auditing virtual Icechunk stores. Prefer it over re-deriving practice from this repo's notebooks, and feed genuinely new lessons back into it rather than only into this file.
+- **`virtual-icechunk` skill** — <https://github.com/ocean-icechunks/ocean-icechunks-skills> (`skills/virtual-icechunk/`, checked out locally at `~/ocean-icechunks-skills`; moved from nmfs-opensci/agent-skills on 2026-11-13). The shared, agent-independent guidance for building, validating, documenting and auditing virtual Icechunk stores. Prefer it over re-deriving practice from this repo's notebooks, and feed genuinely new lessons back into it rather than only into this file.
 - **Sibling repos using the same pattern**, each with its own notebooks and destinations — they are *not* in this repo:
   - `~/cefi-icechunks` — NOAA CEFI MOM6 (`https://data.source.coop/eeholmes/cefi/nepacific-icechunk`, groups `daily/regrid/main`, `daily/regrid/aux`; the yearly-file vs. full-period-file split is why it has two groups).
   - `~/pace-icechunks` — PACE ocean colour.
