@@ -89,12 +89,12 @@ compared). NOAA OISST got a README and a viewer.
   name the server and are kept outside any repo, in `~/pacioos-upload-logs/` on Eli's hub.
 - **Shared utilities drift between store repos** (`publish_viewer.py` differs by ~290 lines
   between here and `hycom`). Decision 2026-11-13: an installable `icechunk-tools` package,
-  versioned, with know-how kept in agent-skills — #44.
-- **Icechunk skills are moving to [ocean-icechunks/skills](https://github.com/ocean-icechunks/skills)**
-  (Eli, 2026-11-13), out of nmfs-opensci/agent-skills: `virtual-icechunk` and the proposed
-  `archive-to-cloud` (agent-skills#40). Moving them, a how-to README, and updating every pointer
-  (this repo's AGENTS.md, pacioos, the other store repos, the PacIOOS team note) is #46, wanted
-  before the 2026-11-17 hackweek. Until then AGENTS.md still points at nmfs-opensci/agent-skills.
+  versioned, with know-how kept in the skills (ocean-icechunks-skills) — #44.
+- **Icechunk skills moved to [ocean-icechunks/ocean-icechunks-skills](https://github.com/ocean-icechunks/ocean-icechunks-skills)**
+  (2026-11-13; Eli kept that name rather than `ocean-icechunks/skills`), out of
+  nmfs-opensci/agent-skills, with history: ocean-icechunks-skills PR #1, and
+  `archive-to-cloud` is its issue #4. AGENTS.md and the README point there. Still open
+  in #46: the how-to README there, the other store repos, and the PacIOOS team note.
 - Watch ocean-icechunks/noaa_oisst#2 for the maintainers' reply; if the store is fixed, the
   OISST README's caveats and its 7 s open time need revisiting and re-mirroring. Eli's
   cross-repo to-do list from 2026-09-19 is in `~/hycom/claude/notes/todo.md`.
