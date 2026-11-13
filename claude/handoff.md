@@ -81,7 +81,7 @@ compared). NOAA OISST got a README and a viewer.
 
 ## Open threads
 
-- **PacIOOS Hawaiʻi models (ROMS, WW3, WRF) — research and plans only, nothing built
+- **PacIOOS Hawaiʻi models (ROMS, WW3, WRF) — NetCDFs copied, no stores built yet
   (2026-11-10, PR #35).** Their THREDDS/ERDDAP expose no files, so the plan is to copy the
   NetCDFs unchanged to Source Cooperative before the **2026-11-17 hackathon**, then build
   virtual stores there. Two PacIOOS-facing Claude Docs that Eli edits and shares; the
@@ -92,8 +92,17 @@ compared). NOAA OISST got a README and a viewer.
   file is in hand: the native chunk layout, hence point-time-series speed, and what the
   NcML adds (diff the raw header against the THREDDS `.das`). Related skill PR:
   nmfs-opensci/agent-skills#39.
-  - **Upload under way (2026-11-11, branch `pacioos-upload`, #36, #37).** Forecast done;
-    WRF/WW3 running; reanalysis next. Layout and versioning decisions are in #37.
+  - **Upload done (2026-11-13, branch `pacioos-upload`, #36, #37).** On Source Cooperative under
+    `ocean-icechunks/pacioos/<dataset>/netcdf/`, every file with a `.md5` sidecar, sampled MD5s
+    all OK: `roms_hiig` (forecast, 2026 to date), `wrf_hi`, `ww3_hawaii`, and
+    `roms_hiig_reanalysis/netcdf/v2.0/` (4,380 files, 1,169.8 GB). How to rerun and check:
+    `pacioos/upload/README.md`. `<dataset>/icechunk/` is reserved for the stores, none built
+    yet. **Not uploaded:** the hindcast (`roms_hiig_assim`, 3.37 TB); Eli decides after
+    looking at the reanalysis, possibly comparing the two, and whether to trim early years.
+    Forecast/WRF/WW3 grow daily and nothing re-runs the upload yet. Change detection and
+    version retirement are open for the hackathon in #37; the upload script never overwrites
+    a finished copy (reports `CHANGED`, exit 4). Lessons proposed as a new skill:
+    nmfs-opensci/agent-skills#40 (`archive-to-cloud`).
   - **To fix in `notes/pacioos-roms.md` once the upload work is done.** It predates the server
     account, and the server contradicts it in places:
     - The hindcast (`roms_hiig_assim`) is **3.37 TB** on disk (4,045 daily 3-day runs), not

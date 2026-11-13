@@ -19,9 +19,10 @@ built over the copies, so readers use Source Cooperative instead of the PacIOOS 
 | `wrf_hi` | `/export/data/model/atm/wrf_hi` | `pacioos/wrf_hi/netcdf/` | 5,607 | 0.94 TB |
 | `ww3_hawaii` | `/export/data/model/ore/ww3/hawaii` | `pacioos/ww3_hawaii/netcdf/` | 5,232 | 0.49 TB |
 | `roms_hiig_reanalysis` | `/export/data/model/ocn/roms_reanalysis/hiig` | `pacioos/roms_hiig_reanalysis/netcdf/v2.0/` | 4,380 | 1.17 TB |
-| `roms_hiig_assim` (hindcast) | `/export/data/model/ocn/roms_assim/hiig` | `pacioos/roms_hiig_assim/netcdf/` | 4,045 | 3.37 TB |
+| `roms_hiig_assim` (hindcast) | `/export/data/model/ocn/roms_assim/hiig` | `pacioos/roms_hiig_assim/netcdf/` (**not uploaded yet**) | 4,045 | 3.37 TB |
 
-Counts as of 2026-11-12. Product names are PacIOOS's THREDDS/ERDDAP dataset IDs.
+Counts as of 2026-11-12. The first four were copied and checked by 2026-11-13; the hindcast
+is waiting on a decision about which years to keep. Product names are PacIOOS's THREDDS/ERDDAP dataset IDs.
 
 **Layout.** Each dataset has its own folder on Source Cooperative, with the original files under
 `netcdf/` and the Icechunk store built over them under `icechunk/`:
