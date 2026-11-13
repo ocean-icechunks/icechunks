@@ -81,48 +81,22 @@ compared). NOAA OISST got a README and a viewer.
 
 ## Open threads
 
-- **PacIOOS Hawaiʻi models (ROMS, WW3, WRF) — NetCDFs copied, no stores built yet
-  (2026-11-10, PR #35).** Their THREDDS/ERDDAP expose no files, so the plan is to copy the
-  NetCDFs unchanged to Source Cooperative before the **2026-11-17 hackathon**, then build
-  virtual stores there. Two PacIOOS-facing Claude Docs that Eli edits and shares; the
-  `claude/notes` copies are snapshots, the docs are live:
-  [transfer plan](https://claude.ai/artifact/4Nqhx91MozRLbfjYXmfpP7) and
-  [virtual-Icechunk explainer](https://claude.ai/artifact/BTCTko294KTQebZW6Y2K4o).
-  Eli is new to server terms (THREDDS, ERDDAP, NcML); explain plainly. Unknown until a raw
-  file is in hand: the native chunk layout, hence point-time-series speed, and what the
-  NcML adds (diff the raw header against the THREDDS `.das`). Related skill PR:
-  nmfs-opensci/agent-skills#39.
-  - **Upload done (2026-11-13, PR #39, #36 closed).** On Source Cooperative under
-    `ocean-icechunks/pacioos/<dataset>/netcdf/`, every file with a `.md5` sidecar, sampled MD5s
-    all OK: `roms_hiig` (forecast, 2026 to date), `wrf_hi`, `ww3_hawaii`, and
-    `roms_hiig_reanalysis/netcdf/v2.0/` (4,380 files, 1,169.8 GB). How to rerun and check:
-    `pacioos/upload/README.md`. `<dataset>/icechunk/` is reserved for the stores, none built
-    yet. **Not uploaded:** the hindcast (`roms_hiig_assim`, 3.37 TB), #40: Eli decides after
-    looking at the reanalysis (possibly comparing the two) which years to keep, and it may go
-    to a different S3 bucket; possibly hackathon work. Forecast/WRF/WW3 grow daily and nothing
-    re-runs the upload yet; automating it is a PacIOOS hackweek project, #41, starting from
-    the OISST pipeline (ocean-icechunks/noaa_oisst). Upload logs (they name the server) are
-    kept gitignored in `pacioos/upload/logs*` of the main checkout. Change detection and
-    version retirement are open for the hackathon in #37; the upload script never overwrites
-    a finished copy (reports `CHANGED`, exit 4). Lessons proposed as a new skill:
-    nmfs-opensci/agent-skills#40 (`archive-to-cloud`).
-  - **To fix in `notes/pacioos-roms.md` once the upload work is done.** It predates the server
-    account, and the server contradicts it in places:
-    - The hindcast (`roms_hiig_assim`) is **3.37 TB** on disk (4,045 daily 3-day runs), not
-      ~1.1 TB.
-    - The forecast and hindcast are **NetCDF-3**, not HDF5. The reanalysis is
-      **uncompressed** NetCDF-4, with chunks `(1, 36, 195, 295)` and one file per day.
-    - There is an unexplained `hiig_replacement_files` set: 0.87 TB, compressed HDF5.
-    - The reanalysis files carry **no version** attribute.
-    - Other regions exist on disk: Samoa and western-Pacific hindcasts, and 7 forecast regions.
-    - Recheck the size table and the "HYCOM trick" rows against real headers.
+- **PacIOOS Hawaiʻi models — moved to [ocean-icechunks/pacioos](https://github.com/ocean-icechunks/pacioos)
+  (2026-11-13)** so the PacIOOS team can take it over. The upload scripts, design notes, handoff
+  and issues (#36, #37, #40, #41 here became pacioos#1–#4) all live there now; history in this
+  repo's PRs #35, #39, #42. NetCDFs for the forecast, WRF, WW3 and reanalysis v2.0 are on
+  Source Cooperative under `ocean-icechunks/pacioos/`; no stores built yet. The upload logs
+  name the server and are kept outside any repo, in `~/pacioos-upload-logs/` on Eli's hub.
+- **Shared utilities drift between store repos** (`publish_viewer.py` differs by ~290 lines
+  between here and `hycom`). Decision 2026-11-13: an installable `icechunk-tools` package,
+  versioned, with know-how kept in agent-skills — #44.
 - Watch ocean-icechunks/noaa_oisst#2 for the maintainers' reply; if the store is fixed, the
   OISST README's caveats and its 7 s open time need revisiting and re-mirroring. Eli's
   cross-repo to-do list from 2026-09-19 is in `~/hycom/claude/notes/todo.md`.
 - **`git pull` fails in this checkout** with "Cannot rebase onto multiple branches"; use
   `git fetch origin && git merge --ff-only origin/main`. Cause not investigated.
 
-- **Auto-update pipeline for CoastWatch — undesigned, and the only substantial work left.**
+- **Auto-update pipeline for CoastWatch (#43) — undesigned, and the only substantial work left.**
   `write_group` skips groups that already exist, but nothing appends *new time steps* to an
   existing group. Until that path and a trigger exist the stores stay frozen at the last
   manual run and drift behind the archive.
@@ -152,6 +126,3 @@ compared). NOAA OISST got a README and a viewer.
 - [gobai-o2-monthly.md](notes/gobai-o2-monthly.md) — what that cleanup found
 - [oa-indicators.md](notes/oa-indicators.md) — what that build found
 - [ohc-rebuild-2026-08-26.md](notes/ohc-rebuild-2026-08-26.md) — the CoastWatch rebuild record
-- [pacioos-roms.md](notes/pacioos-roms.md) — PacIOOS server probe, sizes, chunking, transfer estimates, options
-- [pacioos-transfer-plan.md](notes/pacioos-transfer-plan.md) — snapshot of the lay transfer plan doc
-- [pacioos-virtual-icechunk-explainer.md](notes/pacioos-virtual-icechunk-explainer.md) — snapshot of the lay "how a virtual store is made" doc
