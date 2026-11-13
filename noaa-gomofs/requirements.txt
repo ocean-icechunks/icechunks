@@ -1,0 +1,45 @@
+# Dependencies for the GoMOFS virtual-Icechunk notebook in noaa-gomofs/
+# (see also the repository CLAUDE.md, "Required packages").
+#
+#     pip install -r requirements.txt
+#
+# Lower bounds only, no lock file -- the same policy as the rest of this
+# repository. Nothing here copies array bytes: the store is virtual references
+# into NetCDF-4 files that stay in NOAA's `noaa-nos-ofs-pds` bucket.
+#
+# REQUIRES PYTHON >= 3.12. Every icechunk 2.x release is published
+# `requires_python = ">=3.12"`, so on an older interpreter
+# `pip install "icechunk>=2.1"` resolves to nothing at all. Check `python -V`.
+#
+# Lower bounds are the versions the notebook was last run against, in a clean
+# Python 3.12 venv on 2026-11-12.
+
+icechunk>=2.3
+virtualizarr>=2.8
+zarr>=3.4
+xarray>=2026.9
+
+# Byte-range reads against the public S3 source. obspec-utils provides the
+# ObjectStoreRegistry the parser takes; it imports as `obspec_utils`.
+obstore>=0.12
+obspec-utils>=0.9
+
+# The source files are NetCDF-4/HDF5, so only virtualizarr's HDFParser is used.
+# h5py also backs the source-comparison cell; h5netcdf is the xarray backend
+# that loads the coordinate variables named in `loadable_variables`.
+h5py>=3.16
+h5netcdf>=1.8
+
+# s3fs lists the public bucket and opens source files for the comparison cell.
+s3fs>=2026.9
+fsspec>=2026.2
+
+numpy>=2.3
+
+# The documented read path uses `xr.open_zarr(..., chunks={})`, which hands the
+# arrays to dask -- without it that call raises "chunk manager 'dask' is not
+# available".
+dask[array]>=2026.1
+
+boto3>=1.42        # mirrors the docs to the store's prefix on Source Cooperative
+matplotlib>=3.10   # the verification map at the end of the notebook

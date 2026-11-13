@@ -14,6 +14,7 @@ plus a README and viewer for a fourth store that someone else builds.
 | CoastWatch OHC | `ocean-icechunks/noaa-ohc/{na,np,sp}` | virtual | CORS-blocked at the source; draws with a CORS extension — Eli, 2026-09-19 |
 | GOBAI-O2 v2.3 monthly | `fish-pace/gobai-o2/monthly` | materialized | renders — confirmed by Eli |
 | OA indicators | `ocean-icechunks/oa-indicators/climatology` | virtual | renders — confirmed by Eli, 2026-09-18 |
+| GoMOFS (`timeseries-3d`, `timeseries-2d`; updated every 3 h by GitHub Actions) | `ocean-icechunks/noaa-gomofs/<store>` | virtual | no viewer yet |
 | NOAA OISST v2.1 | `ocean-icechunks/noaa-oisst/oisst.icechunk` | **not ours** — built by NERACOOS/GMRI; `daily` virtual, `monthly` materialized | renders in an ordinary browser — Eli, 2026-09-19 |
 
 - **CoastWatch OHC** — three repos, one per region grid, three groups each (`daily`,
@@ -24,6 +25,13 @@ plus a README and viewer for a fourth store that someone else builds.
 - **OA indicators** — NCEI accession 0270962, built in PR #24. Twelve NetCDFs merged into one
   flat group of 72 variables; 84 objects and 35 kB referencing 82 MB left at NCEI. Finished
   accession, static. [notes/oa-indicators.md](notes/oa-indicators.md)
+
+- **GoMOFS** — live 2026-11-13: `timeseries-3d` (5,622+ steps) and `timeseries-2d` (16,866+ steps), built
+  by an AWS backfill and kept current by <https://github.com/ocean-icechunks/noaa_gomofs> (every 3 h).
+  Open: **NOAA prunes ~1 day of old files per day**, so each store needs a rebuild before `gomofs status`
+  reports its oldest step unreadable (it warns from 715 d; first warning about 2026-11-25); the FMRC stores
+  (`fmrc-3d`, `fmrc-2d`) are not built; no README or viewer for the stores. Details, benchmark and traps:
+  [notes/noaa-gomofs.md](notes/noaa-gomofs.md). The earlier 62-step snapshot (`6SSGY2GQR24J0YFNYGFG`) is superseded.
 
 - **NOAA OISST** — README and viewer only (PR #30, 2026-09-19); the store is Alex Kerney's
   (`ocean-icechunks/noaa_oisst`) and updates about daily. Never write under
