@@ -78,6 +78,7 @@ checksum.
   - `~/cefi-icechunks` — NOAA CEFI MOM6 (`https://data.source.coop/eeholmes/cefi/nepacific-icechunk`, groups `daily/regrid/main`, `daily/regrid/aux`; the yearly-file vs. full-period-file split is why it has two groups).
   - `~/pace-icechunks` — PACE ocean colour.
   - `~/hycom` (`ocean-icechunks/hycom`) — a collection of HYCOM stores, first the GOFS 3.1 reanalysis (306 TB, 63,341 uncompressed NetCDF-3 files). References are *computed* from each file's header rather than parsed, written as a skeleton plus `region=` batches. Its `publish_viewer.py` is a copy of this one, and the viewer fixes above were developed there. Its READMEs tell readers to open with `chunks=None` and select before chunking — right at 2.57 million chunks per variable, **not** advice to copy here.
+  - `~/pacioos` (`ocean-icechunks/pacioos`) — PacIOOS Hawaiʻi models (ROMS, WRF, WW3): NetCDFs copied unchanged to Source Cooperative, stores to be built there. Moved out of this repo 2026-11-13 for the PacIOOS team to take over.
   - `~/gobai-rfrom-icechunks` — GOBAI-O2 / RFROM, the source of the `requirements.txt` style used here.
   - GlobColour/Copernicus CHL — `https://data.source.coop/fish-pace/globcolour/cmems_obs-oc_glo_bgc-plankton_my_l3-multi-4km_P1D`.
 
