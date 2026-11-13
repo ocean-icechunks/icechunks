@@ -92,14 +92,17 @@ compared). NOAA OISST got a README and a viewer.
   file is in hand: the native chunk layout, hence point-time-series speed, and what the
   NcML adds (diff the raw header against the THREDDS `.das`). Related skill PR:
   nmfs-opensci/agent-skills#39.
-  - **Upload done (2026-11-13, branch `pacioos-upload`, #36, #37).** On Source Cooperative under
+  - **Upload done (2026-11-13, PR #39, #36 closed).** On Source Cooperative under
     `ocean-icechunks/pacioos/<dataset>/netcdf/`, every file with a `.md5` sidecar, sampled MD5s
     all OK: `roms_hiig` (forecast, 2026 to date), `wrf_hi`, `ww3_hawaii`, and
     `roms_hiig_reanalysis/netcdf/v2.0/` (4,380 files, 1,169.8 GB). How to rerun and check:
     `pacioos/upload/README.md`. `<dataset>/icechunk/` is reserved for the stores, none built
-    yet. **Not uploaded:** the hindcast (`roms_hiig_assim`, 3.37 TB); Eli decides after
-    looking at the reanalysis, possibly comparing the two, and whether to trim early years.
-    Forecast/WRF/WW3 grow daily and nothing re-runs the upload yet. Change detection and
+    yet. **Not uploaded:** the hindcast (`roms_hiig_assim`, 3.37 TB), #40: Eli decides after
+    looking at the reanalysis (possibly comparing the two) which years to keep, and it may go
+    to a different S3 bucket; possibly hackathon work. Forecast/WRF/WW3 grow daily and nothing
+    re-runs the upload yet; automating it is a PacIOOS hackweek project, #41, starting from
+    the OISST pipeline (ocean-icechunks/noaa_oisst). Upload logs (they name the server) are
+    kept gitignored in `pacioos/upload/logs*` of the main checkout. Change detection and
     version retirement are open for the hackathon in #37; the upload script never overwrites
     a finished copy (reports `CHANGED`, exit 4). Lessons proposed as a new skill:
     nmfs-opensci/agent-skills#40 (`archive-to-cloud`).
